@@ -1,0 +1,37 @@
+<!-- src/main/resources/templates/view-log.html -->
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="'Conteúdo de ' + ${filename}">Conteúdo do Arquivo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        pre {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.25rem;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <h2 th:text="'Conteúdo do Arquivo: ' + ${filename}">Conteúdo do Arquivo</h2>
+
+    <!-- Exibir mensagem de erro, se houver -->
+    <div th:if="${error}" class="alert alert-danger" role="alert">
+        <span th:text="${error}"></span>
+    </div>
+
+    <!-- Exibir o conteúdo do arquivo -->
+    <pre th:text="${content}">Conteúdo do Arquivo</pre>
+
+    <a th:href="@{/}" class="btn btn-secondary">Voltar</a>
+</div>
+
+<!-- Bootstrap JS (opcional) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
