@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Visualização de Logs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+        }
+        .form-section {
+            flex: 1;
+            padding: 20px;
+        }
+        .result-section, .log-content-section {
+            flex: 1;
+            padding: 20px;
+            border-left: 1px solid #ccc;
+        }
+        label, input, button {
+            display: block;
+            margin-bottom: 10px;
+        }
+        #logContent {
+            background-color: #f0f0f0;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            white-space: pre-wrap;
+        }
+        .log-buttons {
+            display: inline-block;
+            margin-right: 10px;
+        }
+    </style>
+    <script>
+        let logSocket;
+
+        // Função para conectar ao WebSocket e receber o conteúdo do log em tempo real
+        function viewLog(element) {
+            const fileName = element.getAttribute("data-filename");  // Obtém o nome do arquivo a partir do data-filename
+            document.getElementById("logContent").textContent = '';  // Limpa a área de log
+
+            if (logSocket) {
+                logSocket.close();  // Fecha o WebSocket anterior, se existir
+            }
+
+            logSocket = new WebSocket('ws://localhost:8080/logs-stream/' + encodeURIComponent(fileName));
+
+            logSocket.onopen = function() {
+                console.log("Conexão WebSocket estabelecida para: " + fileName);
+            };
+
+            logSocket.onmessage = function(event) {
+                const logContent = document.getElementById("logContent");
+                logContent.textContent += event.data + '\n';  // Adiciona nova linha ao log
+                logContent.scrollTop = logContent.scrollHeight;  // Mantém o scroll no final
+            };
+
+            logSocket.onerror = function(error) {
+                console.error("Erro no WebSocket:", error);
+            };
+
+            logSocket.onclose = function() {
+                console.log("WebSocket fechado.");
+            };
+        }
+    </script>
+</head>
+<body>
+<h1>Visualização de Logs via SSH</h1>
+
+<div class="container">
+    <!-- Formulário para inserir as credenciais e o diretório -->
+    <div class="form-section">
+        <h2>Preencha as informações</h2>
+        <form action="/" method="get">
+            <label for="username">Nome de Usuário:</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="password">Senha:</label>
+            <input type="password" id="password" name="password" required>
+
+            <label for="host">Host (IP ou nome):</label>
+            <input type="text" id="host" name="host" required>
+
+            <label for="directory">Diretório dos Logs:</label>
+            <input type="text" id="directory" name="directory" required>
+
+            <button type="submit">Buscar Logs</button>
+        </form>
+    </div>
+
+    <!-- Seção de resultados -->
+    <div class="result-section">
+        <h2>Arquivos de Logs</h2>
+        <ul>
+            <li th:each="log : ${logs}">
+                <span th:text="${log}"></span>
+                <!-- Botão para Ver Log com data-filename resolvido corretamente -->
+                <button class="log-buttons" th:attr="data-filename=${log}" onclick="viewLog(this)">Ver Log</button>
+                <!-- Botão para Download do Arquivo -->
+                <a th:href="@{'/logs/download/' + ${log}}" class="log-buttons" download>Download</a>
+            </li>
+        </ul>
+
+        <!-- Mensagem de erro, se houver -->
+        <p th:if="${error}" th:text="${error}" style="color: red;"></p>
+    </div>
+
+    <!-- Seção de conteúdo do log -->
+    <div class="log-content-section">
+        <h2>Conteúdo do Log</h2>
+        <div id="logContent">Selecione um arquivo para ver o conteúdo do log em tempo real.</div>
+    </div>
+</div>
+</body>
+</html>
